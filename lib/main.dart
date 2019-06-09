@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:vb_noticeboard/vb_noticeboard.dart';
 import 'package:path_provider/path_provider.dart' show getTemporaryDirectory;
-import 'package:path/path.dart' show join;
+import 'package:path/path.dart' show join, basename;
 import 'dart:io' show File;
+import 'downloader.dart';
 
 void main() => runApp(MyApp());
 
@@ -26,8 +27,8 @@ class MyApp extends StatelessWidget {
               ),
               side: BorderSide(
                 style: BorderStyle.solid,
-                color: Colors.black,
-                width: 0.15,
+                color: Colors.white,
+                width: 0.3,
               ),
             ),
             elevation: 10,
@@ -161,7 +162,7 @@ class _MyHomeState extends State<MyHome> with TickerProviderStateMixin {
                           child: ListTile(
                             onTap: () => showDialog(
                                   context: context,
-                                  builder: (context) => AlertDialog(
+                                  builder: (contextNew) => AlertDialog(
                                         title: Text(
                                           'Notice :: ${index + 1}/ ${_noticeBoard.length}',
                                         ),
@@ -172,15 +173,41 @@ class _MyHomeState extends State<MyHome> with TickerProviderStateMixin {
                                         actions: <Widget>[
                                           IconButton(
                                             icon: Icon(
-                                              Icons.favorite,
-                                            ),
-                                            onPressed: null,
-                                          ),
-                                          IconButton(
-                                            icon: Icon(
                                               Icons.file_download,
                                             ),
-                                            onPressed: null,
+                                            onPressed: () =>
+                                                getTemporaryDirectory().then(
+                                                  (dirName) =>
+                                                      Downloader.download(
+                                                        Uri.parse(_noticeBoard
+                                                            .keys
+                                                            .toList()[index]),
+                                                        join(
+                                                          dirName.path,
+                                                          basename(_noticeBoard
+                                                              .keys
+                                                              .toList()[index]),
+                                                        ),
+                                                      ).then(
+                                                        (result) =>
+                                                            Scaffold.of(context)
+                                                                .showSnackBar(
+                                                              SnackBar(
+                                                                content: Text(
+                                                                  result
+                                                                      ? 'Notice Downloaded !!!'
+                                                                      : 'Notice Download Failed !!!',
+                                                                ),
+                                                                backgroundColor:
+                                                                    result
+                                                                        ? Colors
+                                                                            .green
+                                                                        : Colors
+                                                                            .red,
+                                                              ),
+                                                            ),
+                                                      ),
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -190,6 +217,9 @@ class _MyHomeState extends State<MyHome> with TickerProviderStateMixin {
                               _noticeBoard.values.toList()[index]['text'],
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.teal,
+                              ),
                             ),
                             contentPadding: EdgeInsets.only(
                               left: 6,
@@ -199,9 +229,13 @@ class _MyHomeState extends State<MyHome> with TickerProviderStateMixin {
                             ),
                             subtitle: Text(
                               _noticeBoard.values.toList()[index]['date'],
+                              style: TextStyle(
+                                color: Colors.teal,
+                              ),
                             ),
                             leading: Icon(
                               Icons.notifications_active,
+                              color: Colors.red,
                             ),
                           ),
                         ),
